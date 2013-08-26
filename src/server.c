@@ -56,20 +56,12 @@ static int init_listen_socket(const char *port, int alladdr)
 {
 	int rfd;
 	int gai_ret;
-#ifdef HAVE_IPV6
-	int no = 0;
-	int sockopt_ret = 0;
-#endif
 	struct addrinfo hints;
 	struct addrinfo *result=NULL;
 	struct addrinfo *rp=NULL;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-#ifdef HAVE_IPV6
-	hints.ai_family = AF_INET6;
-#else
-	hints.ai_family = AF_INET;
-#endif /* HAVE_IPV6 */
+	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = alladdr ? AI_PASSIVE : 0;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -104,19 +96,6 @@ static int init_listen_socket(const char *port, int alladdr)
 		logp("unable to bind listening socket on port %s\n", port);
 		return -1;
 	}
-
-#ifdef HAVE_IPV6
-	if (rp->ai_family == AF_INET6) {
-		sockopt_ret = setsockopt(rfd, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no));
-	}
-
-	if(!sockopt_ret)
-	{
-		logp("unable to change socket option to "
-			"listen on both IPv4 and IPv6\n");
-		return -1;
-	}
-#endif
 
 	freeaddrinfo(result);
 
