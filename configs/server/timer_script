@@ -12,11 +12,15 @@ reserved2="$1" ; shift
 interval="$1" ; shift
 timestamp="$current/timestamp"
 
+state_dir="/var/run/burp/state"
+current="${current/$storage_dir/$state_dir}"
+timestamp="${timestamp/$storage_dir/$state_dir}"
+
 # A 'backup' file placed in the storage directory tells this script that
 # a backup needs to be done right now.
 # This gives the 'server initiates a manual backup' feature.
 
-manual_file="$storage_dir/$client/backup"
+manual_file="$state_dir/$client/backup"
 if [ -f "$manual_file" ] ; then
 	echo "Found $manual_file"
 	echo "Do a backup of $client now"

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+echo "Running update_state_dir script: $@"
+
+preorpost="$1" ; shift
+action="$1" ; shift  # either "backupphase1" or "backupphase1timed"
+client="$1" ; shift
+success="$1" ; shift
+timer="$1" ; shift
+
+usage()
+{
+   echo "usage: $prog post [backupphase1|backupphase1timed] <client> [0|1] [0|1]" 1>&2
+   echo "The third argument is whether the backup succeeded (0 for ok)" 1>&2
+   echo "The fourth argument is whether the timer script allowed a backup (0 for ok)" 1>&2
+   exit 1
+}
+
+if   [ -z "$preorpost" -o -z "$action" -o -z "$client" -o -z "$success" -o -z "timer" ] || [ "$preorpost" != "post" ]
+then
+   usage
+fi
+
+if [ "$action" != "backupphase1" -a "$action" != "backupphase1timed" ] ; then
+   # It was not a backup that ran.
+   exit 0
+fi
+
+if [ "$action" = "backupphase1timed" ] && [ "$timer" != "0" ] ; then
+   # Server did not allow timed backup to be attempted.
+   exit 0
+fi
+
+if [ "$success" != "0" ] ; then
+   # Backup failed - do not run the offsite backup.
+   exit 0
+fi
+
+rsync -av --include '/*/' --include '/*/*/' --include '/*/current' --include '/*/*/timestamp' --include '/*/*/backup' --exclude '*' /media/freeagent/burp/ /var/run/burp/state
